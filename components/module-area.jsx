@@ -1,4 +1,6 @@
+
 'use client'
+
 import { useDrop } from "react-dnd"
 import {
   Trash2,
@@ -42,7 +44,7 @@ const ModuleArea = ({
       <h2 className="mb-4 text-base font-medium">Your Module</h2>
 
       {fieldsets.length === 0 ? (
-        <div className="flex items-center justify-center bg-white h-90 text-gray-400  rounded-md">
+        <div className="flex items-center justify-center bg-white h-90 text-gray-400 rounded-md">
           <p>Welcome to the Form Builder! Start by adding your first module to create amazing forms.</p>
         </div>
       ) : (
@@ -63,9 +65,8 @@ const ModuleArea = ({
       )}
 
       <div
-        className={`mt-4 h-16 border border-dashed rounded-md ${
-          isOver ? "border-blue-500 bg-blue-50" : "border-red-300 bg-red-50"
-        }`}
+        className={`mt-4 h-16 border border-dashed rounded-md ${isOver ? "border-blue-500 bg-blue-50" : "border-red-300 bg-red-50"
+          }`}
       />
     </div>
   )
@@ -96,11 +97,10 @@ const Fieldset = ({
 
   return (
     <div
-      className={`p-3 border rounded-md ${isOver ? "border-blue-500 bg-blue-50" : "border-gray-200"} ${
-        selectedItem && selectedItem.type === "fieldset" && selectedItem.id === fieldset.id
+      className={`p-3 border rounded-md ${isOver ? "border-blue-500 bg-blue-50" : "border-gray-200"} ${selectedItem && selectedItem.type === "fieldset" && selectedItem.id === fieldset.id
           ? "ring-2 ring-blue-500"
           : ""
-      }`}
+        }`}
       ref={drop}
       onClick={handleFieldsetClick}
     >
@@ -182,26 +182,12 @@ const Field = ({
           </div>
         )
       case "select":
-        return (
-          <div className="mt-2">
-            <select className="w-full p-1 border rounded-md text-sm">
-              <option value="" disabled>
-                Select an option
-              </option>
-              {field.options.map((option) => (
-                <option key={option.id} value={option.value}>
-                  {option.value}
-                </option>
-              ))}
-            </select>
-          </div>
-        )
       case "number-select":
         return (
           <div className="mt-2">
             <select className="w-full p-1 border rounded-md text-sm">
               <option value="" disabled>
-                Select a number
+                {field.type === "number-select" ? "Select a number" : "Select an option"}
               </option>
               {field.options.map((option) => (
                 <option key={option.id} value={option.value}>
@@ -290,9 +276,8 @@ const Field = ({
 
   return (
     <div
-      className={`p-2 border rounded-md ${
-        selectedItem && selectedItem.id === field.id ? "ring-2 ring-blue-500" : "hover:bg-gray-50"
-      }`}
+      className={`p-2 border rounded-md ${selectedItem && selectedItem.id === field.id ? "ring-2 ring-blue-500" : "hover:bg-gray-50"
+        }`}
       onClick={handleClick}
     >
       <div className="flex items-center">

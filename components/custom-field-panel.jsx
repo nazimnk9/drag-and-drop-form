@@ -40,9 +40,8 @@ const DraggableFieldItem = ({ field }) => {
   return (
     <div
       ref={drag}
-      className={`flex items-center justify-between p-2 bg-white  rounded-md cursor-move ${
-        isDragging ? "opacity-50" : ""
-      }`}
+      className={`flex items-center justify-between p-2 bg-white  rounded-md cursor-move ${isDragging ? "opacity-50" : ""
+        }`}
     >
       <div className="flex items-center">
         <Icon className="w-4 h-4 mr-2 text-gray-500" />
