@@ -59,7 +59,7 @@ const PropertiesPanel = ({
   const renderFieldProperties = () => {
     if (selectedItem.type === "fieldset") {
       return (
-        <div className="bg-white p-4">
+        <div className="bg-white p-4 rounded-md">
           <h3 className="mb-2 text-sm font-medium">Field-set</h3>
           <div className="mb-4">
             <input
@@ -79,7 +79,7 @@ const PropertiesPanel = ({
       case "select":
       case "number-select":
         return (
-          <div className="bg-white p-4">
+          <div className="bg-white p-4 rounded-md">
             <h3 className="mb-2 text-sm font-medium">Combo Box / Dropdown</h3>
             <div className="mb-4">
               <input
@@ -139,7 +139,7 @@ const PropertiesPanel = ({
         )
       case "radio":
         return (
-          <div className="bg-white p-4">
+          <div className="bg-white p-4 rounded-md">
             <h3 className="mb-2 text-sm font-medium">Radio Button</h3>
             <div className="mb-4">
               <input
@@ -199,7 +199,7 @@ const PropertiesPanel = ({
         )
       case "checkbox":
         return (
-          <div className="bg-white p-4">
+          <div className="bg-white p-4 rounded-md">
             <h3 className="mb-2 text-sm font-medium">Checkbox</h3>
             <div className="mb-4">
               <input
@@ -259,7 +259,7 @@ const PropertiesPanel = ({
         )
       case "text":
         return (
-          <div className="bg-white p-4">
+          <div className="bg-white p-4 rounded-md">
             <h3 className="mb-2 text-sm font-medium">Text Field</h3>
             <div className="mb-4">
               <input
@@ -285,7 +285,7 @@ const PropertiesPanel = ({
         )
       case "number":
         return (
-          <div className="bg-white p-4">
+          <div className="bg-white p-4 rounded-md">
             <h3 className="mb-2 text-sm font-medium">Number Input</h3>
             <div className="mb-4">
               <input
@@ -311,7 +311,7 @@ const PropertiesPanel = ({
         )
       case "date":
         return (
-          <div className="bg-white p-4">
+          <div className="bg-white p-4 rounded-md">
             <h3 className="mb-2 text-sm font-medium">Datepicker</h3>
             <div className="mb-4">
               <input
@@ -327,7 +327,7 @@ const PropertiesPanel = ({
         )
       case "label":
         return (
-          <div className="bg-white p-4">
+          <div className="bg-white p-4 rounded-md">
             <h3 className="mb-2 text-sm font-medium">Label</h3>
             <div className="mb-4">
               <input
@@ -343,7 +343,7 @@ const PropertiesPanel = ({
         )
       case "textarea":
         return (
-          <div className="bg-white p-4">
+          <div className="bg-white p-4 rounded-md">
             <h3 className="mb-2 text-sm font-medium">Text Area</h3>
             <div className="mb-4">
               <input

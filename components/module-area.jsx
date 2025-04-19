@@ -46,7 +46,7 @@ const ModuleArea = ({
           <p>Welcome to the Form Builder! Start by adding your first module to create amazing forms.</p>
         </div>
       ) : (
-        <div className="bg-white space-y-4">
+        <div className="bg-white space-y-4 rounded-md">
           {fieldsets.map((fieldset) => (
             <Fieldset
               key={fieldset.id}
