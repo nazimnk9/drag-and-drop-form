@@ -1,6 +1,6 @@
 'use client'
 
-import { useDrop } from "react-dnd"
+import { useDrop, useDrag } from "react-dnd"
 import {
   Trash2,
   Copy,
@@ -21,6 +21,7 @@ const ModuleArea = ({
   onSelectItem,
   selectedItem,
   onMoveField,
+  onMoveFieldset,
   onDeleteField,
   onDuplicateField,
 }) => {
@@ -48,14 +49,16 @@ const ModuleArea = ({
         </div>
       ) : (
         <div className="bg-white space-y-4 rounded-md">
-          {fieldsets.map((fieldset) => (
+          {fieldsets.map((fieldset, fieldsetIndex) => (
             <Fieldset
               key={fieldset.id}
               fieldset={fieldset}
+              fieldsetIndex={fieldsetIndex}
               onDropField={onDropField}
               onSelectItem={onSelectItem}
               selectedItem={selectedItem}
               onMoveField={onMoveField}
+              onMoveFieldset={onMoveFieldset}
               onDeleteField={onDeleteField}
               onDuplicateField={onDuplicateField}
             />
@@ -73,17 +76,27 @@ const ModuleArea = ({
 
 const Fieldset = ({
   fieldset,
+  fieldsetIndex,
   onDropField,
   onSelectItem,
   selectedItem,
   onMoveField,
+  onMoveFieldset,
   onDeleteField,
   onDuplicateField,
 }) => {
   const [{ isOver }, drop] = useDrop({
-    accept: "FIELD",
-    drop: (item) => {
-      onDropField(item.type, fieldset.id)
+    accept: ["FIELD", "FIELD_ITEM"],
+    drop: (item, monitor) => {
+      if (item.type === "FIELD") {
+        onDropField(item.fieldType, fieldset.id)
+      } else if (item.fieldsetId && item.index !== undefined) {
+        if (item.fieldsetId === fieldset.id) {
+          onMoveField(item.fieldsetId, item.index, fieldset.id, fieldset.fields.length)
+        } else {
+          onMoveField(item.fieldsetId, item.index, fieldset.id, fieldset.fields.length)
+        }
+      }
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
@@ -133,6 +146,26 @@ const Field = ({
   onDeleteField,
   onDuplicateField,
 }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: "FIELD_ITEM",
+    item: { fieldsetId, index },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  })
+
+  const [{ isOver }, drop] = useDrop({
+    accept: "FIELD_ITEM",
+    drop: (item) => {
+      if (item.fieldsetId === fieldsetId && item.index !== index) {
+        onMoveField(item.fieldsetId, item.index, fieldsetId, index)
+      }
+    },
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+    }),
+  })
+
   const handleClick = (e) => {
     e.stopPropagation()
     onSelectItem({ ...field, fieldsetId })
@@ -275,12 +308,13 @@ const Field = ({
 
   return (
     <div
-      className={`p-2 border rounded-md ${selectedItem && selectedItem.id === field.id ? "ring-2 ring-blue-500" : "hover:bg-gray-50"
+      ref={drop}
+      className={`p-2 border rounded-md ${isOver ? "bg-blue-50" : ""} ${selectedItem && selectedItem.id === field.id ? "ring-2 ring-blue-500" : "hover:bg-gray-50"
         }`}
       onClick={handleClick}
     >
       <div className="flex items-center">
-        <div className="flex items-center justify-center w-6 h-6 mr-2 text-gray-400 cursor-move">
+        <div ref={drag} className="flex items-center justify-center w-6 h-6 mr-2 text-gray-400 cursor-move">
           <GripVertical className="w-4 h-4" />
         </div>
 

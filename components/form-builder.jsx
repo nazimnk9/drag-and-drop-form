@@ -54,7 +54,7 @@ const FormBuilder = () => {
       const response = await updateFormData(apiFormat)
 
       if (response) {
-        await fetchFormData() // Refresh data from GET API after successful save
+        await fetchFormData()
         alert("Form saved successfully!")
       }
     } catch (err) {
@@ -271,6 +271,13 @@ const FormBuilder = () => {
     setLocalChanges(newFieldsets)
   }
 
+  const handleMoveFieldset = (dragIndex, hoverIndex) => {
+    const newFieldsets = [...localChanges]
+    const [movedFieldset] = newFieldsets.splice(dragIndex, 1)
+    newFieldsets.splice(hoverIndex, 0, movedFieldset)
+    setLocalChanges(newFieldsets)
+  }
+
   const handleSelectItem = (item) => {
     setSelectedItem(item)
   }
@@ -433,6 +440,7 @@ const FormBuilder = () => {
             onSelectItem={handleSelectItem}
             selectedItem={selectedItem}
             onMoveField={handleMoveField}
+            onMoveFieldset={handleMoveFieldset}
             onDeleteField={handleDeleteField}
             onDuplicateField={handleDuplicateField}
           />
