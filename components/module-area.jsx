@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useDrop } from "react-dnd"
@@ -98,8 +97,8 @@ const Fieldset = ({
   return (
     <div
       className={`p-3 border rounded-md ${isOver ? "border-blue-500 bg-blue-50" : "border-gray-200"} ${selectedItem && selectedItem.type === "fieldset" && selectedItem.id === fieldset.id
-          ? "ring-2 ring-blue-500"
-          : ""
+        ? "ring-2 ring-blue-500"
+        : ""
         }`}
       ref={drop}
       onClick={handleFieldsetClick}

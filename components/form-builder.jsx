@@ -11,64 +11,60 @@ import Header from "./header"
 import { getFormData, updateFormData, convertToApiFormat, convertToInternalFormat } from "@/lib/api"
 
 const FormBuilder = () => {
-  // State for fieldsets and their fields
   const [fieldsets, setFieldsets] = useState([])
-
-  // State for loading and error handling
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
-
-  // State for the currently selected field or fieldset
   const [selectedItem, setSelectedItem] = useState(null)
+  const [localChanges, setLocalChanges] = useState([])
 
-  // Fetch initial form data from API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        const data = await getFormData()
-
-        // If we get data back, convert it to our internal format
-        if (data && Array.isArray(data)) {
-          const internalFormat = convertToInternalFormat(data)
-          setFieldsets(internalFormat)
-        } else {
-          // If no data or empty array, start with empty fieldsets
-          setFieldsets([])
-        }
-
-        setError(null)
-      } catch (err) {
-        console.error("Failed to fetch form data:", err)
-        setError("Failed to load form data. Please try again later.")
-        // Start with empty fieldsets if there's an error
-        setFieldsets([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
-
-  // Function to save form data to API
-  const saveFormToApi = async (updatedFieldsets) => {
+  const fetchFormData = async () => {
     try {
-      setSaving(true)
-      const apiFormat = convertToApiFormat(updatedFieldsets)
-      await updateFormData(apiFormat)
-      setSaving(false)
-      return true
+      setLoading(true)
+      const data = await getFormData()
+
+      if (data && data.your_respons) {
+        const internalFormat = convertToInternalFormat(data.your_respons)
+        setFieldsets(internalFormat)
+        setLocalChanges(internalFormat)
+      } else {
+        setFieldsets([])
+        setLocalChanges([])
+      }
+
+      setError(null)
     } catch (err) {
-      console.error("Failed to save form data:", err)
-      setError("Failed to save form data. Please try again later.")
-      setSaving(false)
-      return false
+      console.error("Failed to fetch form data:", err)
+      setError("Failed to load form data. Please try again later.")
+      setFieldsets([])
+      setLocalChanges([])
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Generate a unique name based on the type
+  useEffect(() => {
+    fetchFormData()
+  }, [])
+
+  const saveFormToApi = async () => {
+    try {
+      setSaving(true)
+      const apiFormat = convertToApiFormat(localChanges)
+      const response = await updateFormData(apiFormat)
+
+      if (response) {
+        await fetchFormData() // Refresh data from GET API after successful save
+        alert("Form saved successfully!")
+      }
+    } catch (err) {
+      console.error("Failed to save form data:", err)
+      setError("Failed to save form data. Please try again later.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const generateUniqueName = (type) => {
     const baseNames = {
       text: "Text Field",
@@ -84,7 +80,7 @@ const FormBuilder = () => {
     }
 
     const baseName = baseNames[type] || type
-    const existingNames = fieldsets.flatMap((fieldset) => [
+    const existingNames = localChanges.flatMap((fieldset) => [
       fieldset.name,
       ...fieldset.fields.map((field) => field.name),
     ])
@@ -100,12 +96,10 @@ const FormBuilder = () => {
     return newName
   }
 
-  // Handle dropping a field into a fieldset
-  const handleDropField = async (fieldType, fieldsetId, index) => {
-    let updatedFieldsets = [...fieldsets]
+  const handleDropField = (fieldType, fieldsetId, index) => {
+    let updatedFieldsets = [...localChanges]
 
-    // If no fieldset exists or no fieldset is specified, create a new one
-    if (fieldsets.length === 0 || !fieldsetId) {
+    if (localChanges.length === 0 || !fieldsetId) {
       const newFieldsetId = uuidv4()
       const newField = {
         id: uuidv4(),
@@ -125,7 +119,7 @@ const FormBuilder = () => {
       }
 
       updatedFieldsets = [
-        ...fieldsets,
+        ...localChanges,
         {
           id: newFieldsetId,
           name: generateUniqueName("fieldset"),
@@ -133,11 +127,10 @@ const FormBuilder = () => {
         },
       ]
 
-      setFieldsets(updatedFieldsets)
+      setLocalChanges(updatedFieldsets)
       setSelectedItem({ ...newField, fieldsetId: newFieldsetId })
     } else {
-      // Add field to existing fieldset
-      updatedFieldsets = fieldsets.map((fieldset) => {
+      updatedFieldsets = localChanges.map((fieldset) => {
         if (fieldset.id === fieldsetId) {
           const newField = {
             id: uuidv4(),
@@ -176,16 +169,12 @@ const FormBuilder = () => {
         return fieldset
       })
 
-      setFieldsets(updatedFieldsets)
+      setLocalChanges(updatedFieldsets)
     }
-
-    // Save to API
-    await saveFormToApi(updatedFieldsets)
   }
 
-  // Handle updating a field's properties
-  const handleUpdateField = async (fieldsetId, fieldId, updates) => {
-    const updatedFieldsets = fieldsets.map((fieldset) => {
+  const handleUpdateField = (fieldsetId, fieldId, updates) => {
+    const updatedFieldsets = localChanges.map((fieldset) => {
       if (fieldset.id === fieldsetId) {
         return {
           ...fieldset,
@@ -200,40 +189,30 @@ const FormBuilder = () => {
       return fieldset
     })
 
-    setFieldsets(updatedFieldsets)
+    setLocalChanges(updatedFieldsets)
 
-    // Update selected item if it's the one being edited
     if (selectedItem && selectedItem.id === fieldId) {
       setSelectedItem({ ...selectedItem, ...updates })
     }
-
-    // Save to API
-    await saveFormToApi(updatedFieldsets)
   }
 
-  // Handle updating a fieldset's properties
-  const handleUpdateFieldset = async (fieldsetId, updates) => {
-    const updatedFieldsets = fieldsets.map((fieldset) => {
+  const handleUpdateFieldset = (fieldsetId, updates) => {
+    const updatedFieldsets = localChanges.map((fieldset) => {
       if (fieldset.id === fieldsetId) {
         return { ...fieldset, ...updates }
       }
       return fieldset
     })
 
-    setFieldsets(updatedFieldsets)
+    setLocalChanges(updatedFieldsets)
 
-    // Update selected item if it's the fieldset being edited
     if (selectedItem && selectedItem.id === fieldsetId && selectedItem.type === "fieldset") {
       setSelectedItem({ ...selectedItem, ...updates })
     }
-
-    // Save to API
-    await saveFormToApi(updatedFieldsets)
   }
 
-  // Handle deleting a field
-  const handleDeleteField = async (fieldsetId, fieldId) => {
-    const updatedFieldsets = fieldsets
+  const handleDeleteField = (fieldsetId, fieldId) => {
+    const updatedFieldsets = localChanges
       .map((fieldset) => {
         if (fieldset.id === fieldsetId) {
           return {
@@ -245,20 +224,15 @@ const FormBuilder = () => {
       })
       .filter((fieldset) => fieldset.fields.length > 0 || fieldset.id !== fieldsetId)
 
-    setFieldsets(updatedFieldsets)
+    setLocalChanges(updatedFieldsets)
 
-    // Clear selection if the deleted field was selected
     if (selectedItem && selectedItem.id === fieldId) {
       setSelectedItem(null)
     }
-
-    // Save to API
-    await saveFormToApi(updatedFieldsets)
   }
 
-  // Handle duplicating a field
-  const handleDuplicateField = async (fieldsetId, fieldId) => {
-    const updatedFieldsets = fieldsets.map((fieldset) => {
+  const handleDuplicateField = (fieldsetId, fieldId) => {
+    const updatedFieldsets = localChanges.map((fieldset) => {
       if (fieldset.id === fieldsetId) {
         const fieldToDuplicate = fieldset.fields.find((field) => field.id === fieldId)
         if (fieldToDuplicate) {
@@ -281,42 +255,28 @@ const FormBuilder = () => {
       return fieldset
     })
 
-    setFieldsets(updatedFieldsets)
-
-    // Save to API
-    await saveFormToApi(updatedFieldsets)
+    setLocalChanges(updatedFieldsets)
   }
 
-  // Handle moving a field within or between fieldsets
-  const handleMoveField = async (sourceFieldsetId, sourceIndex, targetFieldsetId, targetIndex) => {
-    const newFieldsets = [...fieldsets]
-
-    // Find source and target fieldsets
+  const handleMoveField = (sourceFieldsetId, sourceIndex, targetFieldsetId, targetIndex) => {
+    const newFieldsets = [...localChanges]
     const sourceFieldset = newFieldsets.find((fs) => fs.id === sourceFieldsetId)
     const targetFieldset = newFieldsets.find((fs) => fs.id === targetFieldsetId)
 
     if (!sourceFieldset || !targetFieldset) return
 
-    // Get the field to move
     const [movedField] = sourceFieldset.fields.splice(sourceIndex, 1)
-
-    // Insert at target position
     targetFieldset.fields.splice(targetIndex, 0, movedField)
 
-    setFieldsets(newFieldsets)
-
-    // Save to API
-    await saveFormToApi(newFieldsets)
+    setLocalChanges(newFieldsets)
   }
 
-  // Handle selecting a field or fieldset
   const handleSelectItem = (item) => {
     setSelectedItem(item)
   }
 
-  // Handle adding an option to a field
-  const handleAddOption = async (fieldsetId, fieldId) => {
-    const updatedFieldsets = fieldsets.map((fieldset) => {
+  const handleAddOption = (fieldsetId, fieldId) => {
+    const updatedFieldsets = localChanges.map((fieldset) => {
       if (fieldset.id === fieldsetId) {
         return {
           ...fieldset,
@@ -335,9 +295,8 @@ const FormBuilder = () => {
       return fieldset
     })
 
-    setFieldsets(updatedFieldsets)
+    setLocalChanges(updatedFieldsets)
 
-    // Update selected item if it's the one being edited
     if (selectedItem && selectedItem.id === fieldId) {
       const newOption = { id: uuidv4(), value: `Option ${selectedItem.options.length + 1}` }
       setSelectedItem({
@@ -345,14 +304,10 @@ const FormBuilder = () => {
         options: [...selectedItem.options, newOption],
       })
     }
-
-    // Save to API
-    await saveFormToApi(updatedFieldsets)
   }
 
-  // Handle deleting an option
-  const handleDeleteOption = async (fieldsetId, fieldId, optionId) => {
-    const updatedFieldsets = fieldsets.map((fieldset) => {
+  const handleDeleteOption = (fieldsetId, fieldId, optionId) => {
+    const updatedFieldsets = localChanges.map((fieldset) => {
       if (fieldset.id === fieldsetId) {
         return {
           ...fieldset,
@@ -371,9 +326,8 @@ const FormBuilder = () => {
       return fieldset
     })
 
-    setFieldsets(updatedFieldsets)
+    setLocalChanges(updatedFieldsets)
 
-    // Update selected item if it's the one being edited
     if (selectedItem && selectedItem.id === fieldId) {
       const updatedOptions = selectedItem.options.filter((option) => option.id !== optionId)
       setSelectedItem({
@@ -381,14 +335,10 @@ const FormBuilder = () => {
         options: updatedOptions,
       })
     }
-
-    // Save to API
-    await saveFormToApi(updatedFieldsets)
   }
 
-  // Handle updating an option
-  const handleUpdateOption = async (fieldsetId, fieldId, optionId, value) => {
-    const updatedFieldsets = fieldsets.map((fieldset) => {
+  const handleUpdateOption = (fieldsetId, fieldId, optionId, value) => {
+    const updatedFieldsets = localChanges.map((fieldset) => {
       if (fieldset.id === fieldsetId) {
         return {
           ...fieldset,
@@ -412,7 +362,7 @@ const FormBuilder = () => {
       return fieldset
     })
 
-    setFieldsets(updatedFieldsets)
+    setLocalChanges(updatedFieldsets)
 
     if (selectedItem && selectedItem.id === fieldId) {
       const updatedOptions = selectedItem.options.map((option) => {
@@ -426,24 +376,19 @@ const FormBuilder = () => {
         options: updatedOptions,
       })
     }
-
-    // Save to API
-    await saveFormToApi(updatedFieldsets)
   }
 
-  // Handle saving the form
-  const handleSaveForm = async () => {
-    const success = await saveFormToApi(fieldsets)
-    if (success) {
-      alert("Form saved successfully!")
-    }
-  }
-
-  // Handle draft save
   const handleDraft = async () => {
-    const success = await saveFormToApi(fieldsets)
-    if (success) {
+    try {
+      setSaving(true)
+      const apiFormat = convertToApiFormat(localChanges)
+      await updateFormData(apiFormat)
       alert("Draft saved successfully!")
+    } catch (err) {
+      console.error("Failed to save draft:", err)
+      setError("Failed to save draft. Please try again later.")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -483,7 +428,7 @@ const FormBuilder = () => {
         <div className="flex flex-1 overflow-hidden">
           <CustomFieldPanel />
           <ModuleArea
-            fieldsets={fieldsets}
+            fieldsets={localChanges}
             onDropField={handleDropField}
             onSelectItem={handleSelectItem}
             selectedItem={selectedItem}
@@ -511,7 +456,7 @@ const FormBuilder = () => {
           </button>
           <button
             className={`px-6 py-2 text-white bg-red-500 rounded-md text-sm ${saving ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600"}`}
-            onClick={handleSaveForm}
+            onClick={saveFormToApi}
             disabled={saving}
           >
             {saving ? "Saving..." : "Save Form"}
